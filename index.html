@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HE의 사진 갤러리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #E8362A;
+    --yellow: #F5C518;
+    --green: #2D9E5C;
+    --blue: #2563EB;
+    --black: #1A1A1A;
+    --idea: #9333EA;
+    --bg: #F7F5F0;
+    --card-bg: #FFFFFF;
+    --text: #1A1A1A;
+    --muted: #888;
+    --border: rgba(0,0,0,0.08);
+  }
+
+  body {
+    font-family: 'Pretendard', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    padding: 3rem 2rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: #fff;
+  }
+  header h1 {
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  header p {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  /* COLOR TABS */
+  .tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1.5rem 2rem;
+    overflow-x: auto;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    border: 1.5px solid transparent;
+    background: var(--bg);
+    font-family: 'Pretendard', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    color: var(--text);
+  }
+  .tab-btn .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .tab-btn:hover { background: #eee; }
+  .tab-btn.active {
+    background: var(--cat-color);
+    color: #fff;
+    border-color: var(--cat-color);
+  }
+  .tab-btn.active .dot { background: rgba(255,255,255,0.7); }
+
+  /* UPLOAD AREA */
+  .upload-zone {
+    margin: 2rem auto;
+    max-width: 900px;
+    padding: 0 1.5rem;
+  }
+  .upload-box {
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 2.5rem;
+    text-align: center;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .upload-box:hover { border-color: #aaa; background: #fafafa; }
+  .upload-box.dragover { border-color: var(--active-color, #333); background: #f0f0ff; }
+  .upload-box input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  }
+  .upload-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+  .upload-box p { color: var(--muted); font-size: 0.9rem; }
+  .upload-box strong { color: var(--text); font-weight: 500; }
+  .upload-hint {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 0.4rem;
+  }
+
+  /* CATEGORY LABEL */
+  .section-header {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1.5rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .cat-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  .cat-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+  }
+  .photo-count { color: var(--muted); font-size: 0.85rem; }
+
+  /* GRID */
+  .gallery {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1.5rem 4rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  .photo-card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #e0e0e0;
+    aspect-ratio: 1;
+    cursor: pointer;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .photo-card:hover { transform: scale(1.02); }
+  .photo-card img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .photo-card .delete-btn {
+    position: absolute;
+    top: 6px; right: 6px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .photo-card:hover .delete-btn { display: flex; }
+  .photo-card .cat-badge {
+    position: absolute;
+    bottom: 6px; left: 6px;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  /* EMPTY STATE */
+  .empty {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 3rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .empty-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+  /* LIGHTBOX */
+  .lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 8px;
+    object-fit: contain;
+  }
+  .lightbox-close {
+    position: fixed;
+    top: 1rem; right: 1.5rem;
+    font-size: 2rem;
+    color: #fff;
+    background: none;
+    border: none;
+    cursor: pointer;
+    line-height: 1;
+    opacity: 0.7;
+  }
+  .lightbox-close:hover { opacity: 1; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 2rem; left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: #1a1a1a;
+    color: #fff;
+    padding: 0.6rem 1.4rem;
+    border-radius: 99px;
+    font-size: 0.85rem;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 480px) {
+    .gallery { grid-template-columns: repeat(2, 1fr); }
+    header { padding: 2rem 1rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>HE의 사진 갤러리</h1>
+  <p>색깔로 분류하는 나만의 사진첩</p>
+</header>
+
+<nav class="tabs" id="tabs"></nav>
+
+<div class="upload-zone">
+  <div class="upload-box" id="uploadBox">
+    <input type="file" id="fileInput" accept="image/*" multiple>
+    <div class="upload-icon">📷</div>
+    <p><strong>사진을 여기에 끌어다 놓거나 클릭해서 선택하세요</strong></p>
+    <p class="upload-hint">현재 카테고리: <span id="currentCatLabel">전체</span> &nbsp;·&nbsp; JPG, PNG, WEBP 지원</p>
+  </div>
+</div>
+
+<div class="section-header" id="sectionHeader" style="display:none">
+  <div class="cat-label">
+    <div class="cat-dot" id="catDot"></div>
+    <span id="catName"></span>
+  </div>
+  <span class="photo-count" id="photoCount"></span>
+</div>
+
+<div class="gallery" id="gallery"></div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">✕</button>
+  <img id="lightboxImg" src="" alt="확대 이미지">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CATS = [
+  { id: 'all',    label: '전체',   color: '#1A1A1A' },
+  { id: 'red',    label: '빨강',   color: '#E8362A' },
+  { id: 'yellow', label: '노랑',   color: '#D4A800' },
+  { id: 'green',  label: '초록',   color: '#2D9E5C' },
+  { id: 'blue',   label: '파랑',   color: '#2563EB' },
+  { id: 'black',  label: '검정',   color: '#1A1A1A' },
+  { id: 'idea',   label: '아이디어', color: '#9333EA' },
+];
+
+let photos = JSON.parse(localStorage.getItem('gallery_photos') || '[]');
+let activeTab = 'all';
+
+// --- TABS ---
+const tabsEl = document.getElementById('tabs');
+CATS.forEach(cat => {
+  const btn = document.createElement('button');
+  btn.className = 'tab-btn' + (cat.id === 'all' ? ' active' : '');
+  btn.dataset.id = cat.id;
+  btn.style.setProperty('--cat-color', cat.color);
+  btn.innerHTML = `<span class="dot" style="background:${cat.color}"></span>${cat.label}`;
+  btn.addEventListener('click', () => switchTab(cat.id));
+  tabsEl.appendChild(btn);
+});
+
+function switchTab(id) {
+  activeTab = id;
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    const c = CATS.find(c => c.id === b.dataset.id);
+    b.style.setProperty('--cat-color', c.color);
+    b.classList.toggle('active', b.dataset.id === id);
+  });
+  const cat = CATS.find(c => c.id === id);
+  document.getElementById('currentCatLabel').textContent = cat.label;
+  renderGallery();
+}
+
+// --- UPLOAD ---
+const fileInput = document.getElementById('fileInput');
+const uploadBox = document.getElementById('uploadBox');
+
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+uploadBox.addEventListener('dragover', e => { e.preventDefault(); uploadBox.classList.add('dragover'); });
+uploadBox.addEventListener('dragleave', () => uploadBox.classList.remove('dragover'));
+uploadBox.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadBox.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+
+function handleFiles(files) {
+  const catId = activeTab === 'all' ? promptCategory() : activeTab;
+  if (!catId) return;
+
+  Array.from(files).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      photos.push({ id: Date.now() + Math.random(), src: ev.target.result, cat: catId });
+      save();
+      renderGallery();
+    };
+    reader.readAsDataURL(file);
+  });
+  showToast('사진이 추가됐어요! 📸');
+}
+
+function promptCategory() {
+  const options = CATS.filter(c => c.id !== 'all').map((c,i) => `${i+1}. ${c.label}`).join('\n');
+  const ans = prompt('어떤 카테고리에 저장할까요?\n\n' + options + '\n\n번호를 입력하세요:');
+  if (!ans) return null;
+  const idx = parseInt(ans) - 1;
+  const cats = CATS.filter(c => c.id !== 'all');
+  return cats[idx] ? cats[idx].id : cats[0].id;
+}
+
+// --- RENDER ---
+function renderGallery() {
+  const gallery = document.getElementById('gallery');
+  const list = activeTab === 'all' ? photos : photos.filter(p => p.cat === activeTab);
+
+  const sectionHeader = document.getElementById('sectionHeader');
+  const catDot = document.getElementById('catDot');
+  const catName = document.getElementById('catName');
+  const photoCount = document.getElementById('photoCount');
+
+  if (activeTab !== 'all') {
+    const cat = CATS.find(c => c.id === activeTab);
+    sectionHeader.style.display = 'flex';
+    catDot.style.background = cat.color;
+    catName.textContent = cat.label;
+    photoCount.textContent = `${list.length}장`;
+  } else {
+    sectionHeader.style.display = 'none';
+  }
+
+  gallery.innerHTML = '';
+
+  if (list.length === 0) {
+    gallery.innerHTML = `<div class="empty"><div class="empty-icon">🖼️</div><p>아직 사진이 없어요<br>위에서 사진을 추가해보세요!</p></div>`;
+    return;
+  }
+
+  list.forEach(photo => {
+    const cat = CATS.find(c => c.id === photo.cat);
+    const card = document.createElement('div');
+    card.className = 'photo-card';
+    card.innerHTML = `
+      <img src="${photo.src}" alt="사진" loading="lazy">
+      <button class="delete-btn" data-id="${photo.id}" title="삭제">✕</button>
+      <span class="cat-badge" style="background:${cat ? cat.color : '#888'}">${cat ? cat.label : ''}</span>
+    `;
+    card.querySelector('img').addEventListener('click', () => openLightbox(photo.src));
+    card.querySelector('.delete-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      deletePhoto(photo.id);
+    });
+    gallery.appendChild(card);
+  });
+}
+
+function deletePhoto(id) {
+  if (!confirm('이 사진을 삭제할까요?')) return;
+  photos = photos.filter(p => p.id !== id);
+  save();
+  renderGallery();
+  showToast('삭제됐어요');
+}
+
+// --- LIGHTBOX ---
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+document.getElementById('lightboxClose').addEventListener('click', () => lightbox.classList.remove('open'));
+lightbox.addEventListener('click', e => { if (e.target === lightbox) lightbox.classList.remove('open'); });
+
+function openLightbox(src) {
+  lightboxImg.src = src;
+  lightbox.classList.add('open');
+}
+
+// --- TOAST ---
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// --- SAVE ---
+function save() {
+  try { localStorage.setItem('gallery_photos', JSON.stringify(photos)); } catch(e) {
+    showToast('저장 공간이 부족해요 😅');
+  }
+}
+
+renderGallery();
+</script>
+</body>
+</html>
